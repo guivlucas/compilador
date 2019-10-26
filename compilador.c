@@ -11,6 +11,8 @@ int isPalavraReservada(char *palavra);
 void exibirError(char *palavra, int tipoError, int nuLinha);
 void apresentarMemoriaConsumida();
 void calcularMemoria(int tipo, int valor);
+int isAspasDuploBalanceamentValido(char *palavra);
+void removerQuebraLinha(char* palavra);
 
 char palavraReservada[12][11] = {"funcao", "principal", "retorno", "ler", "escrever", "testar", "falso", "verdadeiro", "repetir", "inteiro", "caracter", "real"};
 int MEMORIA_CONSUMIDA = 0;
@@ -25,16 +27,26 @@ void main(){
     char caracter;
     int nuLinha = 1;
     int ascii;
-    int count = 0;
+    int count = 0; 
+    int countLinha = 0;
+    int quantidadeParenteses = 0;
+    char acumuladorLinha[UCHAR_MAX];
+    int quantidadeColchete = 0;
+    int quantidadeChaves = 0;
+    int isAspasValidas = 0;
 
     calcularMemoria(1, sizeof(palavraReservada));
     calcularMemoria(1, sizeof(acumulador));
     calcularMemoria(1, sizeof(nuLinha));
     calcularMemoria(1, sizeof(ascii));
     calcularMemoria(1, sizeof(count));
+    calcularMemoria(1, sizeof(acumuladorLinha));
+    calcularMemoria(1, sizeof(countLinha));
+
 
     // Limpando lixo de memoria.
     limparConteudoString(acumulador);
+    limparConteudoString(acumuladorLinha);
 
     // Ler arquivo e verificar se não existe
     char url_arquivo[]="arquivo_teste.txt";
@@ -51,8 +63,39 @@ void main(){
 
     while((caracter = fgetc(arquivo)) != EOF) {
         ascii = (int) caracter;
-        
+        acumuladorLinha[countLinha] = caracter;
+        countLinha ++;
 
+        // Verifica abertura de parenteses
+        if (ascii == 40) {
+            quantidadeParenteses ++;
+        }
+
+        // Verifica fechamento de parenteses
+        if (ascii == 41) {
+            quantidadeParenteses --;
+        }       
+
+        // Verifica abertura de colchetes
+        if (ascii == 91) {
+            quantidadeColchete ++;
+        }
+
+        // Verifica fechamento de colchetes
+        if (ascii == 93) {
+            quantidadeColchete --;
+        }       
+
+        // Verifica abertura de Chaves
+        if (ascii == 123) {
+            quantidadeChaves ++;
+        }
+
+        // Verifica fechamento de Chaves
+        if (ascii == 125) {
+            quantidadeChaves --;
+        }       
+  
         if (!isCondicaoParada(ascii)) {
             acumulador[count] = caracter;
             count ++;
@@ -99,23 +142,53 @@ void main(){
 
         //puts(acumulador);
 
-
-        // Validar condicao de parada
-
+        
 
         //printf("Linha->%d - %d - %c - %s \n", nuLinha, ascii, caracter, acumulador);
         // Verifica se é uma quebra de linha.
         if (isQuebraLinha(ascii)) {
+            
+            if (quantidadeParenteses != 0) {
+                exibirError(acumuladorLinha, 2, nuLinha);
+            }
+
+            if (quantidadeColchete != 0) {
+                exibirError(acumuladorLinha, 3, nuLinha);
+            }
+
+            // Verificar duplo balanceamento de aspas.
+            isAspasValidas = isAspasDuploBalanceamentValido(acumuladorLinha);
+			if (!isAspasValidas) {
+				exibirError(acumuladorLinha, 5, nuLinha);
+			}
+
             nuLinha = nuLinha + 1;
         }
 
         if (isQuebraLinha(ascii)) {
             count = 0;
+            countLinha = 0;
             limparConteudoString(acumulador);
+            limparConteudoString(acumuladorLinha);
         }
     }
 
+    if (quantidadeChaves != 0) {
+        char a[] = {""};
+        exibirError(a, 4, 0);
+    }
+
     apresentarMemoriaConsumida();
+
+    // Limpando memoria consumida.
+    calcularMemoria(0, sizeof(palavraReservada));
+    calcularMemoria(0, sizeof(acumulador));
+    calcularMemoria(0, sizeof(nuLinha));
+    calcularMemoria(0, sizeof(ascii));
+    calcularMemoria(0, sizeof(count));
+    calcularMemoria(0, sizeof(url_arquivo));
+    calcularMemoria(0, sizeof(arquivo));
+
     fclose(arquivo);
 
     printf("\n\n");
@@ -140,12 +213,16 @@ int isCondicaoParada(int ascii) {
         (ascii != 59) && // ; -> 59
         (ascii != 123) && // { -> 123
         (ascii != 125) && // } -> 125
+        (ascii != 91) && // [ -> 91
+        (ascii != 93) && // ] -> 93
         (ascii != 44) && // , -> 44
         (ascii != 36) && // $ -> 36
         (ascii != 33) && // ! -> 33
         (ascii != 58) && // : -> 58
+        (ascii != 34) && // : -> 34
         (ascii != 10) && // Line Feed - LF (Windows) -> 10
         (ascii != 13) // Enter - CR (Unix) -> 13
+
     ) {
         return 0;
     }
@@ -179,6 +256,27 @@ void exibirError(char *palavra, int tipoError, int nuLinha) {
     switch(tipoError) {
         case 1:
             printf("Linha[%d] - o valor nao e identificado - (%s).\n", nuLinha, palavra);
+            exit(0);
+        break;
+        
+        case 2:
+            printf("Linha[%d] - o duplo balanceamento de parenteses esta incorreto - (%s).\n", nuLinha, palavra);
+            exit(0);
+        break;
+
+        case 3:
+            printf("Linha[%d] - o duplo balanceamento de colchete esta incorreto - (%s).\n", nuLinha, palavra);
+            exit(0);
+        break;
+
+        case 4:
+            printf("O duplo balanceamento de chave esta incorreto. Favor verificar.\n");
+            exit(0);
+        break;
+
+        case 5:
+            removerQuebraLinha(palavra);
+            printf("Linha[%d] - o duplo balanceamento de aspas esta incorreto - (%s).\n", nuLinha, palavra);
             exit(0);
         break;
 
@@ -222,3 +320,54 @@ void apresentarMemoriaConsumida() {
 	printf("Porcentagem consumida => %.2f %% de %i bytes\n\n" , porcentagem, MEMORIA_MAXIMA);
 }
 
+int isAspasDuploBalanceamentValido(char *palavra) {
+	int i, ascii, hasAspas = 0;
+
+	if (strlen(palavra) == 0) {
+		return 1;
+	}
+
+	for (i = 0; i < strlen(palavra); i++) {
+		ascii = (int) palavra[i];
+		// se for igual " -> 34
+		if (ascii == 34 && hasAspas > 0) {
+			hasAspas--;
+			continue;
+		}
+
+		// se for igual " -> 34
+		if (ascii == 34 && hasAspas == 0) {
+			hasAspas++;
+			continue;
+		}
+	}
+
+	if (hasAspas == 0) {
+		return 1;
+	}
+	return 0;
+}
+
+void removerQuebraLinha(char* palavra) {
+	int i, valorAscii, count = 0;
+	char palavraTemporaria[UCHAR_MAX];
+	limparConteudoString(palavraTemporaria);
+
+	for (i = 0; i < strlen(palavra); i++) {
+		valorAscii = (int) palavra[i];
+
+		// Line Feed = LF (Windows) => 10
+		// Enter = CR (Unix) => 13
+		if ((valorAscii != 13) && (valorAscii != 10)) {
+			palavraTemporaria[count] = palavra[i];
+			count++;
+		}
+	}
+
+	strcpy(palavra, palavraTemporaria);
+
+	calcularMemoria(sizeof(i), 1);
+	calcularMemoria(sizeof(valorAscii), 1);
+	calcularMemoria(sizeof(count), 1);
+	calcularMemoria(sizeof(palavraTemporaria), 1);
+}

@@ -1,6 +1,6 @@
 principal(){
-    caracter;
-
-    inteiro
+    "" 
 }
+
+
 

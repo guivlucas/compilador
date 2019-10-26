@@ -9,8 +9,12 @@ int isQuebraLinha(int ascii);
 int isCondicaoParada(int ascii);
 int isPalavraReservada(char *palavra);
 void exibirError(char *palavra, int tipoError, int nuLinha);
+void apresentarMemoriaConsumida();
+void calcularMemoria(int tipo, int valor);
 
 char palavraReservada[12][11] = {"funcao", "principal", "retorno", "ler", "escrever", "testar", "falso", "verdadeiro", "repetir", "inteiro", "caracter", "real"};
+int MEMORIA_CONSUMIDA = 0;
+int MEMORIA_MAXIMA = 1024000; //  1024 Kilobytes = 1024000  bytes
 
 void main(){
     printf("===========================================\n");
@@ -23,6 +27,11 @@ void main(){
     int ascii;
     int count = 0;
 
+    calcularMemoria(1, sizeof(palavraReservada));
+    calcularMemoria(1, sizeof(acumulador));
+    calcularMemoria(1, sizeof(nuLinha));
+    calcularMemoria(1, sizeof(ascii));
+    calcularMemoria(1, sizeof(count));
 
     // Limpando lixo de memoria.
     limparConteudoString(acumulador);
@@ -31,6 +40,9 @@ void main(){
     char url_arquivo[]="arquivo_teste.txt";
     FILE *arquivo;
     arquivo = fopen(url_arquivo, "r");
+
+    calcularMemoria(1, sizeof(url_arquivo));
+    calcularMemoria(1, sizeof(arquivo));
  
     if (arquivo == NULL) {
         printf("Erro, favor verificar a existência deste arquivo.\n");
@@ -103,6 +115,7 @@ void main(){
         }
     }
 
+    apresentarMemoriaConsumida();
     fclose(arquivo);
 
     printf("\n\n");
@@ -110,6 +123,7 @@ void main(){
 }
 
 int isQuebraLinha(int ascii) {
+    calcularMemoria(1, sizeof(ascii));
     if (ascii == 10 || ascii == 13) {
         return 1;
     }
@@ -117,6 +131,7 @@ int isQuebraLinha(int ascii) {
 }
 
 int isCondicaoParada(int ascii) {
+    calcularMemoria(1, sizeof(ascii));
     if (
         (ascii != 10) && // \0 -> 10
         (ascii != 32) && // espaco -> 32
@@ -139,6 +154,9 @@ int isCondicaoParada(int ascii) {
 
 int isPalavraReservada(char *palavra) {
     int i;
+
+    calcularMemoria(1, sizeof(i));
+
     for (i = 0; i < 12; i++) {
 		if (strcmp(palavra, palavraReservada[i]) == 0) {
 			return 1;
@@ -149,6 +167,7 @@ int isPalavraReservada(char *palavra) {
 
 void limparConteudoString(char palavra[]) {
 	int i = 0;
+    calcularMemoria(1, sizeof(i));
 
 	while (i < UCHAR_MAX) {
 		palavra[i] = '\0';
@@ -168,3 +187,38 @@ void exibirError(char *palavra, int tipoError, int nuLinha) {
         break; 
     }
 }
+// Tipo 1 adiciona memoria.
+void calcularMemoria(int tipo, int valor) {
+    if (tipo == 1) {
+		MEMORIA_CONSUMIDA = MEMORIA_CONSUMIDA + valor;
+	} else {
+		MEMORIA_CONSUMIDA = MEMORIA_CONSUMIDA - valor;
+	}
+
+	float porcentagem = 0;
+	if (MEMORIA_MAXIMA > 0) {
+		porcentagem = (MEMORIA_CONSUMIDA * 100) / MEMORIA_MAXIMA;
+	}
+
+	if (porcentagem > 90 && porcentagem < 99) {
+		printf("Sua memoria esta entre 90 %% a 99 %% do total disponível, memoria atual: %.2f %%\n\n", porcentagem);
+	}
+
+	if (MEMORIA_CONSUMIDA > MEMORIA_MAXIMA) {
+        printf ("Memoria ultrapassou o limite disponivel.\n");
+
+        apresentarMemoriaConsumida();
+        exit(0);
+	}
+}
+
+void apresentarMemoriaConsumida() {
+	printf("\nCONSUMO DE MEMORIA: %d bytes\n\n", MEMORIA_CONSUMIDA);
+	float porcentagem = 0;
+	if (MEMORIA_MAXIMA > 0) {
+		porcentagem = (MEMORIA_CONSUMIDA * 100) / MEMORIA_MAXIMA;
+	}	 
+
+	printf("Porcentagem consumida => %.2f %% de %i bytes\n\n" , porcentagem, MEMORIA_MAXIMA);
+}
+

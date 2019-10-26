@@ -1,8 +1,6 @@
 principal(){
-    caracter $nome;
+    caracter;
 
     inteiro
-
-    lucas
 }
 

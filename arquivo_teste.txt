@@ -1,0 +1,8 @@
+principal(){
+    caracter $nome;
+
+    inteiro
+
+    lucas
+}
+

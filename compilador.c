@@ -43,7 +43,6 @@ void main(){
     calcularMemoria(1, sizeof(acumuladorLinha));
     calcularMemoria(1, sizeof(countLinha));
 
-
     // Limpando lixo de memoria.
     limparConteudoString(acumulador);
     limparConteudoString(acumuladorLinha);
@@ -207,6 +206,7 @@ int isCondicaoParada(int ascii) {
     calcularMemoria(1, sizeof(ascii));
     if (
         (ascii != 10) && // \0 -> 10
+        (ascii != 9) && // tab -> 32
         (ascii != 32) && // espaco -> 32
         (ascii != 40) && // ( -> 40 
         (ascii != 41) && // ) -> 41
@@ -370,4 +370,143 @@ void removerQuebraLinha(char* palavra) {
 	calcularMemoria(sizeof(valorAscii), 1);
 	calcularMemoria(sizeof(count), 1);
 	calcularMemoria(sizeof(palavraTemporaria), 1);
+}
+
+
+// ------------------------------------------------------------
+
+// Struct que armazena a informacoes do simbolo da tabela de simbolos.
+typedef struct simbolo {
+	char tipo_dado[UCHAR_MAX];
+    char nome_variavel[UCHAR_MAX];
+    char possivel_valor[UCHAR_MAX];
+    char funcao_modulo[UCHAR_MAX];
+} Simbolo;
+
+// Struct que armazena os elementos da lista, de acordo com o tipo do dado.
+typedef struct elemSimbolo {
+    struct elemSimbolo *ant;
+    Simbolo dados;
+    struct elemSimbolo *prox;
+} ElemSimbolo;
+
+typedef struct elemSimbolo* TabelaSimbolo;
+
+// Cria a lista, que armazena a tabela de simbolos.
+TabelaSimbolo* criaListaTabelaSimbolo() {
+    TabelaSimbolo* lista = (TabelaSimbolo*) malloc(sizeof(TabelaSimbolo));
+
+    if (lista != NULL) {
+        *lista = NULL;
+    }
+
+    return lista;
+}
+
+// Remove todos os elementos da lista.
+void liberaListaTabelaSimbolo(TabelaSimbolo* lista) {
+    if (lista != NULL) {
+        ElemSimbolo* no;
+
+        while ((*lista) != NULL) {
+            no = *lista;
+            *lista = (*lista)->prox;
+            free(no);
+        }
+
+        free(lista);
+    }
+}
+
+// Inseri no final da lista de acordo com parametros informados.
+int insereFinalTabelaSimbolo(TabelaSimbolo* lista, Simbolo simbolo) {
+    if (lista == NULL) {
+        return 0;
+    }
+
+    ElemSimbolo *no;
+    no = (ElemSimbolo*) malloc(sizeof(ElemSimbolo));
+    if (no == NULL) {
+        return 0;
+    }
+
+    no->dados = simbolo;
+    no->prox = NULL;
+
+    // lista vazia: insere inicio
+    if ((*lista) == NULL) {
+        no->ant = NULL;
+        *lista = no;
+    } else {
+        ElemSimbolo *aux;
+        aux = *lista;
+
+        while (aux->prox != NULL) {
+            aux = aux->prox;
+        }
+
+        aux->prox = no;
+        no->ant = aux;
+    }
+    return 1;
+}
+
+// Retorna o total de itens que compoem a lista.
+int tamanhoTabelaSimbolo(TabelaSimbolo* lista) {
+    if (lista == NULL) {
+        return 0;
+    }
+
+    int cont = 0;
+    ElemSimbolo* no = *lista;
+
+    while (no != NULL) {
+        cont++;
+        no = no->prox;
+    }
+
+    return cont;
+}
+
+// Verifica se a lista esta vazia.
+int isVazioTabelaSimbolo(TabelaSimbolo* lista) {
+	int isVazio = 0;
+
+    if (lista == NULL) {
+        isVazio = 1;
+    }
+
+    if (*lista == NULL) {
+        isVazio = 1;
+    }
+
+    return isVazio;
+}
+
+// Imprime os itens da lista.
+void imprimeTabelaSimbolo(TabelaSimbolo* lista) {
+    if (lista == NULL) {
+        return;
+    }
+
+    printf("====================================================================\n");
+    printf("# TABELA DE SIMBOLOS \n");
+    printf("====================================================================\n");
+    
+    ElemSimbolo* no = *lista;
+
+    if (isVazioTabelaSimbolo(lista)) {
+    	printf("# A TABELA DE SIMBOLOS ESTA VAZIA.\n");
+    	printf("====================================================================\n\n");
+        exit(0);
+	}
+
+    while (no != NULL) {
+        printf("Tipo de dado: %s \n", no->dados.tipo_dado);
+        printf("Nome da variavel: %s \n", no->dados.nome_variavel);
+        printf("Possivel valor: %s \n", no->dados.possivel_valor);
+        printf("Funcao/modulo: %s \n", no->dados.funcao_modulo);
+        printf("====================================================================\n");
+        no = no->prox;
+    }
 }

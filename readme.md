@@ -1,7 +1,7 @@
 gcc compilador.c -o compilador && ./compilador
 
 - Calcular memoria consumida - OK
+- Verificar duplo balanceamento - OK
+- Validar identação - ok
 - Validar declaração de variável - 
-- Verificar duplo balanceamento - 
-- Validar identação - 
 - Criar tabela de símbolos - 

@@ -18,6 +18,29 @@ char palavraReservada[12][11] = {"funcao", "principal", "retorno", "ler", "escre
 int MEMORIA_CONSUMIDA = 0;
 int MEMORIA_MAXIMA = 1024000; //  1024 Kilobytes = 1024000  bytes
 
+// Estrutura baseada no site: https://programacaodescomplicada.wordpress.com/complementar/
+typedef struct simbolo {
+	char tipo_dado[UCHAR_MAX];
+    char nome_variavel[UCHAR_MAX];
+    char possivel_valor[UCHAR_MAX];
+    char funcao_modulo[UCHAR_MAX];
+} Simbolo;
+
+typedef struct elemSimbolo {
+    struct elemSimbolo *ant;
+    Simbolo dados;
+    struct elemSimbolo *prox;
+} ElemSimbolo;
+
+typedef struct elemSimbolo* TabelaSimbolo;
+
+TabelaSimbolo* criaListaTabelaSimbolo();
+int insereFinalTabelaSimbolo(TabelaSimbolo* lista, Simbolo simbolo);
+int tamanhoTabelaSimbolo(TabelaSimbolo* lista);
+int isVazioTabelaSimbolo(TabelaSimbolo* lista); 
+void imprimeTabelaSimbolo(TabelaSimbolo* lista);
+
+
 void main(){
     printf("===========================================\n");
     printf("Seja bem-vinda ao compilador da Flavia\n");
@@ -59,6 +82,29 @@ void main(){
         printf("Erro, favor verificar a existência deste arquivo.\n");
         exit(0);
     }
+
+    // -----------------------------------------------------------------------------------
+    TabelaSimbolo* novaTabelaSimbolos = criaListaTabelaSimbolo();
+
+    Simbolo novoSimbolo;
+    strcpy(novoSimbolo.tipo_dado, "inteiro");
+    strcpy(novoSimbolo.nome_variavel, "$quantidade");
+    strcpy(novoSimbolo.possivel_valor, "190");
+    strcpy(novoSimbolo.funcao_modulo, "principal");
+
+    Simbolo novoSimbolo2;
+    strcpy(novoSimbolo2.tipo_dado, "caracter");
+    strcpy(novoSimbolo2.nome_variavel, "$nome");
+    strcpy(novoSimbolo2.possivel_valor, "teste");
+    strcpy(novoSimbolo2.funcao_modulo, "principal");
+
+    insereFinalTabelaSimbolo(novaTabelaSimbolos, novoSimbolo);
+    insereFinalTabelaSimbolo(novaTabelaSimbolos, novoSimbolo2);
+
+    imprimeTabelaSimbolo(novaTabelaSimbolos);
+
+    exit(0);
+    // -----------------------------------------------------------------------------------
 
     while((caracter = fgetc(arquivo)) != EOF) {
         ascii = (int) caracter;
@@ -375,24 +421,6 @@ void removerQuebraLinha(char* palavra) {
 
 // ------------------------------------------------------------
 
-// Struct que armazena a informacoes do simbolo da tabela de simbolos.
-typedef struct simbolo {
-	char tipo_dado[UCHAR_MAX];
-    char nome_variavel[UCHAR_MAX];
-    char possivel_valor[UCHAR_MAX];
-    char funcao_modulo[UCHAR_MAX];
-} Simbolo;
-
-// Struct que armazena os elementos da lista, de acordo com o tipo do dado.
-typedef struct elemSimbolo {
-    struct elemSimbolo *ant;
-    Simbolo dados;
-    struct elemSimbolo *prox;
-} ElemSimbolo;
-
-typedef struct elemSimbolo* TabelaSimbolo;
-
-// Cria a lista, que armazena a tabela de simbolos.
 TabelaSimbolo* criaListaTabelaSimbolo() {
     TabelaSimbolo* lista = (TabelaSimbolo*) malloc(sizeof(TabelaSimbolo));
 
@@ -403,7 +431,6 @@ TabelaSimbolo* criaListaTabelaSimbolo() {
     return lista;
 }
 
-// Remove todos os elementos da lista.
 void liberaListaTabelaSimbolo(TabelaSimbolo* lista) {
     if (lista != NULL) {
         ElemSimbolo* no;
@@ -418,7 +445,6 @@ void liberaListaTabelaSimbolo(TabelaSimbolo* lista) {
     }
 }
 
-// Inseri no final da lista de acordo com parametros informados.
 int insereFinalTabelaSimbolo(TabelaSimbolo* lista, Simbolo simbolo) {
     if (lista == NULL) {
         return 0;
@@ -451,7 +477,6 @@ int insereFinalTabelaSimbolo(TabelaSimbolo* lista, Simbolo simbolo) {
     return 1;
 }
 
-// Retorna o total de itens que compoem a lista.
 int tamanhoTabelaSimbolo(TabelaSimbolo* lista) {
     if (lista == NULL) {
         return 0;
@@ -468,7 +493,6 @@ int tamanhoTabelaSimbolo(TabelaSimbolo* lista) {
     return cont;
 }
 
-// Verifica se a lista esta vazia.
 int isVazioTabelaSimbolo(TabelaSimbolo* lista) {
 	int isVazio = 0;
 
@@ -483,7 +507,6 @@ int isVazioTabelaSimbolo(TabelaSimbolo* lista) {
     return isVazio;
 }
 
-// Imprime os itens da lista.
 void imprimeTabelaSimbolo(TabelaSimbolo* lista) {
     if (lista == NULL) {
         return;
@@ -502,11 +525,15 @@ void imprimeTabelaSimbolo(TabelaSimbolo* lista) {
 	}
 
     while (no != NULL) {
+        printf("Funcao/modulo: %s \n", no->dados.funcao_modulo);
         printf("Tipo de dado: %s \n", no->dados.tipo_dado);
         printf("Nome da variavel: %s \n", no->dados.nome_variavel);
         printf("Possivel valor: %s \n", no->dados.possivel_valor);
-        printf("Funcao/modulo: %s \n", no->dados.funcao_modulo);
         printf("====================================================================\n");
         no = no->prox;
     }
 }
+
+
+
+

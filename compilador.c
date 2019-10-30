@@ -13,6 +13,7 @@ void apresentarMemoriaConsumida();
 void calcularMemoria(int tipo, int valor);
 int isAspasDuploBalanceamentValido(char *palavra);
 void removerQuebraLinha(char* palavra);
+int isPalavraReservadaPrincipal(char *palavra);
 
 char palavraReservada[12][11] = {"funcao", "principal", "retorno", "ler", "escrever", "testar", "falso", "verdadeiro", "repetir", "inteiro", "caracter", "real"};
 int MEMORIA_CONSUMIDA = 0;
@@ -57,6 +58,8 @@ void main(){
     int quantidadeColchete = 0;
     int quantidadeChaves = 0;
     int isAspasValidas = 0;
+    int isPrincipalExistente =0;
+
 
     calcularMemoria(1, sizeof(palavraReservada));
     calcularMemoria(1, sizeof(acumulador));
@@ -84,6 +87,7 @@ void main(){
     }
 
     // -----------------------------------------------------------------------------------
+    /*
     TabelaSimbolo* novaTabelaSimbolos = criaListaTabelaSimbolo();
 
     Simbolo novoSimbolo;
@@ -104,6 +108,7 @@ void main(){
     imprimeTabelaSimbolo(novaTabelaSimbolos);
 
     exit(0);
+    */
     // -----------------------------------------------------------------------------------
 
     while((caracter = fgetc(arquivo)) != EOF) {
@@ -150,6 +155,11 @@ void main(){
         } else {
             
             if (isPalavraReservada(acumulador)) {
+                // Validar principal
+                if (isPalavraReservadaPrincipal(acumulador)) {
+                    isPrincipalExistente++; 
+                }
+
                 // Validar ler
 
                 // Validar escrever
@@ -207,6 +217,12 @@ void main(){
 				exibirError(acumuladorLinha, 5, nuLinha);
 			}
 
+            // Verifica se existe mais de uma declaracao de principal
+            if (isPrincipalExistente > 1) {
+                char a[] = {""};
+                exibirError(a, 6, 0);
+            }
+
             nuLinha = nuLinha + 1;
         }
 
@@ -216,6 +232,11 @@ void main(){
             limparConteudoString(acumulador);
             limparConteudoString(acumuladorLinha);
         }
+    } // Final do While
+
+    if(isPrincipalExistente ==0){
+        char a[] = {""};
+        exibirError(a, 7, 0);
     }
 
     if (quantidadeChaves != 0) {
@@ -322,7 +343,17 @@ void exibirError(char *palavra, int tipoError, int nuLinha) {
 
         case 5:
             removerQuebraLinha(palavra);
-            printf("Linha[%d] - o duplo balanceamento de aspas esta incorreto - (%s).\n", nuLinha, palavra);
+            printf("Linha[%d] - o duplo balanceamento de aspas esta incorreto. - (%s).\n", nuLinha, palavra);
+            exit(0);
+        break;
+
+        case 6:
+            printf("Ja foi declarado anteriormente a funcao principal. \n");
+            exit(0);
+        break;
+
+        case 7:
+            printf("Modulo principal inexistente.\n");
             exit(0);
         break;
 
@@ -418,6 +449,12 @@ void removerQuebraLinha(char* palavra) {
 	calcularMemoria(sizeof(palavraTemporaria), 1);
 }
 
+int isPalavraReservadaPrincipal(char *palavra) {
+    if (strcmp(palavra, palavraReservada[1]) == 0) {
+        return 1;
+    }
+    return 0;
+}
 
 // ------------------------------------------------------------
 

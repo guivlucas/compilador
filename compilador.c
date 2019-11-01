@@ -14,6 +14,9 @@ void calcularMemoria(int tipo, int valor);
 int isAspasDuploBalanceamentValido(char *palavra);
 void removerQuebraLinha(char* palavra);
 int isPalavraReservadaPrincipal(char *palavra);
+int isTipoDeVariavel(char *palavra);
+int isVerificaDeclaracaoVariavel(char *palavra, int nuLinha);
+
 
 char palavraReservada[12][11] = {"funcao", "principal", "retorno", "ler", "escrever", "testar", "falso", "verdadeiro", "repetir", "inteiro", "caracter", "real"};
 int MEMORIA_CONSUMIDA = 0;
@@ -55,10 +58,16 @@ void main(){
     int countLinha = 0;
     int quantidadeParenteses = 0;
     char acumuladorLinha[UCHAR_MAX];
+    char nomeTipoVariavel[UCHAR_MAX];
+    char nomeTipoFuncao[UCHAR_MAX];
+    char nomeVariavel[UCHAR_MAX];
     int quantidadeColchete = 0;
     int quantidadeChaves = 0;
     int isAspasValidas = 0;
     int isPrincipalExistente =0;
+    int isPossuiDeclaracaoVariavel =0;
+    int isVariavelValida =0;
+
 
 
     calcularMemoria(1, sizeof(palavraReservada));
@@ -72,6 +81,9 @@ void main(){
     // Limpando lixo de memoria.
     limparConteudoString(acumulador);
     limparConteudoString(acumuladorLinha);
+    limparConteudoString(nomeTipoVariavel);
+    limparConteudoString(nomeTipoFuncao);
+    limparConteudoString(nomeVariavel);
 
     // Ler arquivo e verificar se não existe
     char url_arquivo[]="arquivo_teste.txt";
@@ -86,10 +98,9 @@ void main(){
         exit(0);
     }
 
-    // -----------------------------------------------------------------------------------
-    /*
+   
     TabelaSimbolo* novaTabelaSimbolos = criaListaTabelaSimbolo();
-
+    /*
     Simbolo novoSimbolo;
     strcpy(novoSimbolo.tipo_dado, "inteiro");
     strcpy(novoSimbolo.nome_variavel, "$quantidade");
@@ -144,7 +155,7 @@ void main(){
         // Verifica fechamento de Chaves
         if (ascii == 125) {
             quantidadeChaves --;
-        }       
+        }
   
         if (!isCondicaoParada(ascii)) {
             acumulador[count] = caracter;
@@ -153,11 +164,19 @@ void main(){
             //printf("Linha->%d - %d - %c - %s \n", nuLinha, ascii, caracter, acumulador);
         
         } else {
-            
+            printf("Condicao de parada %d - (%c)\n", ascii, caracter);
             if (isPalavraReservada(acumulador)) {
                 // Validar principal
                 if (isPalavraReservadaPrincipal(acumulador)) {
+                    strcpy(nomeTipoFuncao, acumulador);
                     isPrincipalExistente++; 
+                }
+
+                // Validar tipo de dado
+                if (isTipoDeVariavel(acumulador)) {
+                    isPossuiDeclaracaoVariavel++;
+                    strcpy(nomeTipoVariavel, acumulador);
+                    printf("Tipo variável. (%s) - (%s)\n ", nomeTipoVariavel, nomeTipoFuncao);
                 }
 
                 // Validar ler
@@ -183,8 +202,28 @@ void main(){
             } else {
                 // Verifica se o acumulador esta vazio.
                 if (strlen(acumulador) > 0) {
-                    // Nao e uma palavra reservada.
-                    exibirError(acumulador, 1, nuLinha);
+                    // Verifica se é um tipo de variável válido.
+
+                    isVariavelValida = isVerificaDeclaracaoVariavel(acumulador, nuLinha);
+
+                    if (!isVariavelValida) {
+                        // Nao e uma palavra reservada.
+                        exibirError(acumulador, 1, nuLinha);
+                    }else{
+                        // Variavel valida
+                        strcpy(nomeVariavel, acumulador);
+
+
+                        // Salvando a tabela de símbolos
+                        Simbolo novoSimbolo;
+                        strcpy(novoSimbolo.tipo_dado, nomeTipoVariavel);
+                        strcpy(novoSimbolo.nome_variavel, nomeVariavel);
+                       // strcpy(novoSimbolo.possivel_valor, "teste");
+                        strcpy(novoSimbolo.funcao_modulo, nomeTipoFuncao);
+
+                        insereFinalTabelaSimbolo(novaTabelaSimbolos, novoSimbolo);
+
+                    }
                 }
             }
 
@@ -194,6 +233,13 @@ void main(){
 
         }
         printf("--> Linha->%d - %d - %s \n", nuLinha, ascii, acumulador);
+
+
+        // Verifica "$"
+        if (ascii == 36) {
+            acumulador[count] = caracter;
+            count ++; 
+        }
 
         //puts(acumulador);
 
@@ -223,6 +269,11 @@ void main(){
                 exibirError(a, 6, 0);
             }
 
+            isPossuiDeclaracaoVariavel =0;
+            limparConteudoString(nomeTipoVariavel);    
+            isVariavelValida =0;
+            limparConteudoString(nomeVariavel);
+
             nuLinha = nuLinha + 1;
         }
 
@@ -244,6 +295,7 @@ void main(){
         exibirError(a, 4, 0);
     }
 
+    imprimeTabelaSimbolo(novaTabelaSimbolos);
     apresentarMemoriaConsumida();
 
     // Limpando memoria consumida.
@@ -357,6 +409,11 @@ void exibirError(char *palavra, int tipoError, int nuLinha) {
             exit(0);
         break;
 
+        case 8:
+            printf("Linha[%d] - a declaracao da variavel e invalida. - (%s).\n", nuLinha, palavra);
+            exit(0);
+        break;
+
         default:
             printf("O tipo de erro informado nao existe.\n");
         break; 
@@ -456,6 +513,60 @@ int isPalavraReservadaPrincipal(char *palavra) {
     return 0;
 }
 
+int isTipoDeVariavel(char *palavra) {
+    // Verifica inteiro
+    if (strcmp(palavra, palavraReservada[9])) {
+        return 1;
+    }
+
+    // Verifica caracter
+    if (strcmp(palavra, palavraReservada[10])) {
+        return 1;
+    }
+
+    // Verificar real
+    if (strcmp(palavra, palavraReservada[11])) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int isVerificaDeclaracaoVariavel(char *palavra, int nuLinha) {
+    int isValido = 0, i, ascii;
+
+	ascii = (int) palavra[0];
+
+	// verifica se a palavra inicializa com $ = 36
+	if (ascii == 36) {
+		// apenas a-z
+		if ((int) palavra[1] >= 97 && (int) palavra[1] <= 122) {
+			isValido = 1;
+		} else {
+			exibirError(palavra, 8, nuLinha);
+            return 0;
+		}
+
+		for (i = 2; i < strlen(palavra); i++) {
+			ascii = (int) palavra[i];
+
+			// permiter apenas a-z, 0-9, A-Z, [, ], .
+			if (! (
+                (ascii >= 97 && ascii <= 122) || 
+                (ascii >= 48 && ascii <= 57) || 
+                (ascii >= 65 && ascii <= 90) ||
+                (ascii == 91 || ascii == 93 || ascii == 46))
+            )
+            {
+				isValido = 0;
+				// printf("\n[Declaracao variavel]\n");
+			    exibirError(palavra, 8, nuLinha);
+			}
+		}
+	}
+
+	return isValido;
+}
 // ------------------------------------------------------------
 
 TabelaSimbolo* criaListaTabelaSimbolo() {
@@ -558,7 +669,6 @@ void imprimeTabelaSimbolo(TabelaSimbolo* lista) {
     if (isVazioTabelaSimbolo(lista)) {
     	printf("# A TABELA DE SIMBOLOS ESTA VAZIA.\n");
     	printf("====================================================================\n\n");
-        exit(0);
 	}
 
     while (no != NULL) {

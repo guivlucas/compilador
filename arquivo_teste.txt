@@ -1,5 +1,6 @@
-principal(               ){
+principal(){
+    inteiro $quantidade4;
+    caracter $nome
+    real $total
+    
 }
-
-
-

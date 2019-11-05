@@ -1,6 +1,20 @@
 principal(){
-    inteiro $quantidade4;
-    caracter $nome
-    real $total
-    
+	inteiro $a, $b2 := 7;
+	inteiro $d $b;
+	$b2 := $a;
+	escrever("Escreva um número ");
+	ler ($a);
+	testar ($a <= $b2)
+	escrever(" A é maior", $a);
+	escrever("B é maior", $b);
+
+	repetir ($d = 1; $d<=100; $d:=$d+2){
+		escrever("D", $d);
+	}
+}
+
+funcao __autenticar(inteiro $quantidade) {
+}
+
+funcao __logout(caracter $email) {
 }

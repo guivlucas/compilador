@@ -4,5 +4,20 @@ gcc compilador.c -o compilador && ./compilador
 - Verificar duplo balanceamento - OK
 - Validar identação - ok
 - Criar tabela de símbolos - ok
-- Validar declaração de variável - 
+- Validar declaração de variável - ok
 - Declaração de função
+- Redeclaração de variáveis
+- Verificação de existência de variável
+- Atribuição
+- Ler
+- Escrever
+- Validar ponto e virgula
+    - Declaração
+    - Ler
+    - Escrever
+    - Retorno
+    - Atribuições
+    - Verdadeiro
+    - Falso
+- Validar conteudo em aspas
+- Atualizar valor de variável
